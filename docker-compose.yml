@@ -1,0 +1,39 @@
+version: '2'
+services:
+  php:
+    build: ./docker/php/.
+    volumes:
+      - ./volumes/project:/var/www/html
+      - ./volumes/apache-log:/var/log/apache2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APACHE_LOG_DIR: '/var/log/apache2'
+    links:
+      - db
+      - redis
+    working_dir: /var/www/html
+  db:
+    build: ./docker/mysql/.
+    volumes:
+      - ./docker/mysql/initial-data:/docker-entrypoint-initdb.d
+      - ./docker/mysql/data:/var/lib/mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - "3306:3306"
+  node:
+    build: ./docker/node/.
+    volumes_from:
+      - php
+    links:
+      - php
+    ports:
+      - "3001:3001"
+      - "8080:8080"
+    working_dir: /var/www/node
+  redis:
+    build: ./docker/redis/.
+    ports:
+      - "6379:6379"
